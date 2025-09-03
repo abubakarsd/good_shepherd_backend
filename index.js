@@ -53,24 +53,30 @@ const sendEmails = async (mailOptions, userEmail, userSubject, userText) => {
 
 // Route for Appointment Form
 app.post('/api/appointments', async (req, res) => {
-  const { name, number, email, message } = req.body;
+    // Note the change here to handle 'email' or 'e-mail'
+    const { name, number, message } = req.body;
+    const email = req.body.email || req.body['e-mail'];
 
-  const recipientMail = {
-    from: process.env.EMAIL_USER,
-    to: process.env.RECEIVER_EMAIL,
-    subject: 'New Appointment Booking',
-    text: `New appointment booked:\nName: ${name}\nPhone: ${number}\nEmail: ${email}\nMessage: ${message}`,
-  };
+    if (!name || !number || !email) {
+      return res.status(400).json({ message: 'Missing required fields: name, number, or email.' });
+    }
 
-  const userSubject = 'Appointment Confirmation - Good Shepherd Hospital';
-  const userText = `Hello ${name},\n\nThank you for booking an appointment with Good Shepherd Hospital & Maternity. We have received your request and will contact you shortly to confirm the details.\n\nBest regards,\nThe Good Shepherd Team`;
+    const recipientMail = {
+      from: process.env.EMAIL_USER,
+      to: process.env.RECEIVER_EMAIL,
+      subject: 'New Appointment Booking',
+      text: `New appointment booked:\nName: ${name}\nPhone: ${number}\nEmail: ${email}\nMessage: ${message}`,
+    };
 
-  const success = await sendEmails(recipientMail, email, userSubject, userText);
-  if (success) {
-    res.status(200).json({ message: 'Appointment booked successfully! A confirmation has been sent to your email.' });
-  } else {
-    res.status(500).json({ message: 'Failed to book appointment. Please try again later.' });
-  }
+    const userSubject = 'Appointment Confirmation - Good Shepherd Hospital';
+    const userText = `Hello ${name},\n\nThank you for booking an appointment with Good Shepherd Hospital & Maternity. We have received your request and will contact you shortly to confirm the details.\n\nBest regards,\nThe Good Shepherd Team`;
+
+    const success = await sendEmails(recipientMail, email, userSubject, userText);
+    if (success) {
+      res.status(200).json({ message: 'Appointment booked successfully! A confirmation has been sent to your email.' });
+    } else {
+      res.status(500).json({ message: 'Failed to book appointment. Please try again later.' });
+    }
 });
 
 // Route for Contact Us Form
